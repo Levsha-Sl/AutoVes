@@ -1,0 +1,111 @@
+﻿<Window x:Class="WeighingSystem.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Программное обеспечение оператора весов" 
+        Height="710" Width="1000"
+        WindowStartupLocation="CenterScreen" Loaded="Window_Loaded">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Панель текущего веса и камер -->
+        <Grid Grid.Row="0" Margin="0,0,0,10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="Текущий вес:" FontSize="16" VerticalAlignment="Center"/>
+                <TextBlock x:Name="CurrentWeightText" Text="0.00 кг" FontSize="24" Margin="10,0,0,0" FontWeight="Bold" VerticalAlignment="Center"/>
+                <Button Content="Обнулить" Click="ResetWeight_Click" Margin="20,0,0,0" Height="30"/>
+            </StackPanel>
+            <StackPanel Grid.Column="1" Margin="20,0,0,0">
+                <Label Content="Камеры в реальном времени"/>
+                <StackPanel Orientation="Horizontal">
+                    <Image x:Name="CameraFeed" Height="100" Width="200" Stretch="Uniform" Source="C:\Users\akorolev\source\repos\WeighingSystem\WeighingSystem\Properties\camera_placeholder.jpg"/>
+                    <Image x:Name="CameraFee" Height="100" Width="200" Stretch="Uniform" Source="C:\Users\akorolev\source\repos\WeighingSystem\WeighingSystem\Properties\camera_placeholder.jpg"/>
+                    <Image x:Name="CameraFe" Height="100" Width="200" Stretch="Uniform" Source="C:\Users\akorolev\source\repos\WeighingSystem\WeighingSystem\Properties\camera_placeholder.jpg"/>
+                </StackPanel>
+            </StackPanel>
+        </Grid>
+
+        <!-- Основная форма ввода данных -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Левая часть: ввод данных -->
+            <StackPanel Grid.Column="0" Margin="0,0,10,0">
+                <Label Content="Номер автомобиля"/>
+                <StackPanel Orientation="Horizontal">
+                    <ComboBox x:Name="VehicleComboBox" IsEditable="True" Width="200" HorizontalAlignment="Left"/>
+                    <Button Content="..." Click="OpenVehicleReference_Click" Width="30" Margin="5,0,0,0"/>
+                </StackPanel>
+                <Label Content="Тип груза"/>
+                <StackPanel Orientation="Horizontal">
+                    <ComboBox x:Name="CargoTypeComboBox" IsEditable="True" Width="200" HorizontalAlignment="Left"/>
+                    <Button Content="..." Click="OpenCargoTypeReference_Click" Width="30" Margin="5,0,0,0"/>
+                </StackPanel>
+                <Label Content="Склад отгрузки"/>
+                <StackPanel Orientation="Horizontal">
+                    <ComboBox x:Name="SourceWarehouseComboBox" IsEditable="True" Width="200" HorizontalAlignment="Left"/>
+                    <Button Content="..." Click="OpenSourceWarehouseReference_Click" Width="30" Margin="5,0,0,0"/>
+                </StackPanel>
+                <Label Content="Склад назначения"/>
+                <StackPanel Orientation="Horizontal">
+                    <ComboBox x:Name="DestinationWarehouseComboBox" IsEditable="True" Width="200" HorizontalAlignment="Left"/>
+                    <Button Content="..." Click="OpenDestinationWarehouseReference_Click" Width="30" Margin="5,0,0,0"/>
+                </StackPanel>
+                <Label Content="Контрагент"/>
+                <StackPanel Orientation="Horizontal">
+                    <ComboBox x:Name="CounterpartyComboBox" IsEditable="True" Width="200" HorizontalAlignment="Left"/>
+                    <Button Content="..." Click="OpenCounterpartyReference_Click" Width="30" Margin="5,0,0,0"/>
+                </StackPanel>
+                <Label Content="Водитель"/>
+                <StackPanel Orientation="Horizontal">
+                    <ComboBox x:Name="DriverComboBox" IsEditable="True" Width="200" HorizontalAlignment="Left"/>
+                    <Button Content="..." Click="OpenDriverReference_Click" Width="30" Margin="5,0,0,0"/>
+                </StackPanel>
+                <Label Content="Тара"/>
+                <TextBlock x:Name="TareTextBox" Width="200" HorizontalAlignment="Left" Background="Gray"/>
+                <Label Content="Брутто"/>
+                <TextBlock x:Name="BruttoTextBox" Width="200" HorizontalAlignment="Left" Background="Gray"/>
+                <Label Content="Нетто"/>
+                <TextBlock x:Name="NettoTextBox" Width="200" HorizontalAlignment="Left" Background="Gray"/>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,20,0,0">
+                    <Button Content="Взвешать Тару" Click="SaveTare_Click" Margin="0,0,30,0" HorizontalAlignment="Left"/>
+                    <Button Content="Взвешать Брутто" Click="SaveBrutto_Click" Margin="30,0,0,0" HorizontalAlignment="Right"/>
+                </StackPanel>
+                <Button Content="Сохранить взвешивание" Click="SaveWeighing_Click" Margin="0,10,0,0"/>
+            </StackPanel>
+
+            <!-- Правая часть: фотофиксация и дерево взвешиваний -->
+            <StackPanel Grid.Column="1">
+                <Label Content="Фотофиксация"/>
+                <Grid>
+                    <Image x:Name="WeighingPhoto" Height="200" Width="300" Stretch="Uniform" Source="C:\Users\akorolev\source\repos\WeighingSystem\WeighingSystem\Properties\placeholder.jpg"/>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,10">
+                        <Button Content="С" Click="PreviousPhoto_Click" Margin="0,0,10,0"/>
+                        <Button Content="П" Click="NextPhoto_Click"/>
+                    </StackPanel>
+                </Grid>
+                <Label Content="Дерево взвешиваний"/>
+                <TreeView x:Name="WeighingTree" Height="224"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- Нижняя панель: кнопки -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,10,0,0">
+            <Button Content="Сгенерировать PDF" Click="GeneratePdf_Click" Margin="0,0,10,0"/>
+            <Button Content="Сгенерировать Excel" Click="GenerateExcel_Click" Margin="0,0,10,0"/>
+            <Button Content="Настройки" Click="OpenSettings_Click"/>
+            <Button Content="История" Click="OpenHistory_Click" Margin="10,0,0,0"/>
+            <Button Content="Справка" Click="OpenHelp_Click" Margin="10,0,0,0"/>
+        </StackPanel>
+    </Grid>
+</Window>

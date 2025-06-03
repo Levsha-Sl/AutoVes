@@ -1,0 +1,19 @@
+﻿<Window x:Class="WeighingSystem.HelpWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Справка" Height="400" Width="600">
+    <TabControl Margin="10">
+        <TabItem Header="Инструкция">
+            <TextBlock Text="Инструкция по использованию программы (заглушка)" Margin="10"/>
+        </TabItem>
+        <TabItem Header="Контакты">
+            <TextBlock Text="Телефон: +7 (999) 123-45-67
+Email: support@weighingsystem.ru" Margin="10"/>
+        </TabItem>
+        <TabItem Header="О программе">
+            <TextBlock Text="Программное обеспечение оператора весов
+Версия: Beta 1.0
+Дата: 20.03.2025" Margin="10"/>
+        </TabItem>
+    </TabControl>
+</Window>

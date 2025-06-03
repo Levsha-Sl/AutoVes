@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.11.35327.3
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WeighingSystem", "WeighingSystem\WeighingSystem.csproj", "{693277E9-3912-4162-A899-6BA685B84E60}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{693277E9-3912-4162-A899-6BA685B84E60}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{693277E9-3912-4162-A899-6BA685B84E60}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{693277E9-3912-4162-A899-6BA685B84E60}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{693277E9-3912-4162-A899-6BA685B84E60}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {7C1D058C-31D5-47E5-9037-BE3E910B35BD}
+	EndGlobalSection
+EndGlobal
