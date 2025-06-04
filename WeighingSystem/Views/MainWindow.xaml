@@ -1,0 +1,300 @@
+﻿<Window x:Class="WeighingSystem.Views.MainWindow"
+		xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+		xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+		xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
+		xmlns:viewModels="clr-namespace:WeighingSystem.ViewModels"
+		xmlns:converters="clr-namespace:WeighingSystem.Converters"
+		xmlns:controls="clr-namespace:WeighingSystem.Controls"
+		Title="Программное обеспечение оператора весов" 
+		Height="710" Width="1000"
+		WindowStartupLocation="CenterScreen"
+        x:Name="RootWindow">
+    <Window.DataContext>
+        <viewModels:MainWindowViewModel/>
+    </Window.DataContext>
+    <Window.Resources>
+        <converters:ByteArrayToBitmapImageConverter x:Key="ByteArrayToBitmapImageConverter" />
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+        
+        <controls:RegexValidationRule x:Key="VehicleNumber" 
+            Pattern="^(?i)[АВЕКМНОРСТУХ]((\d{3}[АВЕКМНОРСТУХ]{2}\d{0,3})|(\d{3}[АВЕКМНОРСТУХ]{0,1})|\d{0,2})$|^$"
+            Example="а123бв456 или а123бв45"/>
+        <controls:RegexValidationRule x:Key="DriverFIO"
+            Pattern="^(?i)([а-яё]+)(\s+([а-яё]+))?(\s+([а-яё]+))?\s*$|^$"
+            Example="Фамилия Имя Отчество"/>
+
+        <Style TargetType="controls:SuggestionTextBox">
+            <Setter Property="Validation.ErrorTemplate">
+                <Setter.Value>
+                    <ControlTemplate>
+                        <StackPanel Orientation="Horizontal">
+                            <Border BorderBrush="Red" BorderThickness="2">
+                                <AdornedElementPlaceholder/>
+                            </Border>
+                        </StackPanel>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <!-- При наличии ошибки показываем ToolTip -->
+                <Trigger Property="Validation.HasError" Value="true">
+                    <Setter Property="ToolTip"
+                        Value="{Binding RelativeSource={RelativeSource Self}, 
+                            Path=(Validation.Errors)[0].ErrorContent}" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
+    <i:Interaction.Triggers>
+        <i:EventTrigger EventName="Closing">
+            <i:InvokeCommandAction Command="{Binding WindowClosingCommand}" />
+        </i:EventTrigger>
+    </i:Interaction.Triggers>
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Панель текущего веса и камер -->
+        <Grid Grid.Row="0" Margin="0,0,0,10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="Текущий вес:" FontSize="16" VerticalAlignment="Center"/>
+                <TextBlock Width="150" Margin="10,0,0,0" VerticalAlignment="Center"
+                    FontSize="24" FontWeight="Bold" TextAlignment="Right"
+                    Text="{Binding CurrentWeight, StringFormat='{}{0} кг', TargetNullValue='------'}"/>
+                <Button Content="Обнулить" Command="{Binding ResetWeight}" Margin="20,0,0,0" Height="30"/>
+            </StackPanel>
+            <StackPanel Grid.Column="1" Margin="20,0,0,0">
+                <Label Content="Камеры в реальном времени"/>
+                <ScrollViewer Height="150" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+                    <ItemsControl ItemsSource="{Binding Cameras}" >
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Image Visibility="{Binding IsVideoInRootMenu, Converter={StaticResource BooleanToVisibilityConverter}}" 
+                                       Source="{Binding Image}" 
+                                       Stretch="Uniform" Margin="10">
+                                    <Image.ContextMenu>
+                                        <ContextMenu>
+                                            <MenuItem Header="Превью камеры"
+                                                Command="{Binding Source={x:Reference RootWindow}, Path=DataContext.ShowPreviewCommand}"
+                                                CommandParameter="{Binding}" />
+                                            <MenuItem Header="Отключить камеру"
+                                                Command="{Binding Source={x:Reference RootWindow}, Path=DataContext.ClosingCameraCommand}"
+                                                CommandParameter="{Binding}" />
+                                        </ContextMenu>
+                                    </Image.ContextMenu>
+                                </Image>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <ScrollViewer.ContextMenu>
+                        <ContextMenu>
+                            <MenuItem Header="Включить камеру">
+                                <MenuItem.ItemsSource>
+                                    <Binding Path="PlacementTarget.DataContext.AvailableCameras"
+                                        RelativeSource="{RelativeSource AncestorType=ContextMenu}" />
+                                </MenuItem.ItemsSource>
+                                <MenuItem.ItemTemplate>
+                                    <DataTemplate>
+                                        <MenuItem Header="{Binding Name}"
+                                            Command="{Binding PlacementTarget.DataContext.ActivateCameraCommand,
+                                            RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                            CommandParameter="{Binding}" />
+                                    </DataTemplate>
+                                </MenuItem.ItemTemplate>
+                            </MenuItem>
+                        </ContextMenu>
+                    </ScrollViewer.ContextMenu>
+                </ScrollViewer>
+            </StackPanel>
+        </Grid>
+
+        <!-- Основная форма ввода данных -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Левая часть: ввод данных -->
+            <StackPanel Grid.Column="0" Margin="0,0,10,0">
+                <Label Content="Номер автомобиля"/>
+                <StackPanel Orientation="Horizontal">
+                    <controls:SuggestionTextBox Width="200"
+                        Suggestions="{Binding ListVehicle}" 
+                        Filter="StartsWith">
+                        <controls:SuggestionTextBox.TextValue>
+                            <Binding Path="SelectedWeighing.Vehicle"
+                                Mode="TwoWay" 
+                                UpdateSourceTrigger="PropertyChanged">
+                                <Binding.ValidationRules>
+                                    <StaticResource ResourceKey="VehicleNumber" />
+                                </Binding.ValidationRules>
+                            </Binding>
+                        </controls:SuggestionTextBox.TextValue>
+                    </controls:SuggestionTextBox>
+                    <Button Content="..." Width="30" Margin="5,0,0,0"
+                        Command="{Binding OpenVehicleReference}"/>
+                </StackPanel>
+                <Label Content="Тип груза"/>
+                <StackPanel Orientation="Horizontal">
+                    <controls:SuggestionTextBox Width="200"
+                        Suggestions="{Binding ListCargoType}" 
+                        TextValue="{Binding SelectedWeighing.CargoType,
+                        Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                    <Button Content="..." Width="30" Margin="5,0,0,0"
+                        Command="{Binding OpenCargoTypeReference}"/>
+                </StackPanel>
+                <Label Content="Склад отгрузки"/>
+                <StackPanel Orientation="Horizontal">
+                    <controls:SuggestionTextBox Width="200"
+                        Suggestions="{Binding ListSourceWarehouse}"
+                        TextValue="{Binding SelectedWeighing.SourceWarehouse,
+                        Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                    <Button Content="..." Width="30" Margin="5,0,0,0"
+                        Command="{Binding OpenSourceWarehouseReference}"/>
+                </StackPanel>
+                <Label Content="Склад назначения"/>
+                <StackPanel Orientation="Horizontal">
+                    <controls:SuggestionTextBox Width="200"
+                        Suggestions="{Binding ListDestinationWarehouse}"
+                        TextValue="{Binding SelectedWeighing.DestinationWarehouse,
+                        Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                    <Button Content="..." Width="30" Margin="5,0,0,0"
+                        Command="{Binding OpenDestinationWarehouseReference}"/>
+                </StackPanel>
+                <Label Content="Контрагент"/>
+                <StackPanel Orientation="Horizontal">
+                    <controls:SuggestionTextBox Width="200"
+                        Suggestions="{Binding ListCounterparty}"
+						TextValue="{Binding SelectedWeighing.Counterparty, 
+                        Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                    <Button Content="..." Width="30" Margin="5,0,0,0"
+                        Command="{Binding OpenCounterpartyReference}"/>
+                </StackPanel>
+                <Label Content="Водитель"/>
+                <StackPanel Orientation="Horizontal">
+                    <controls:SuggestionTextBox Width="200"
+                        Suggestions="{Binding ListDriver}">
+                        <controls:SuggestionTextBox.TextValue>
+                            <Binding Path="SelectedWeighing.Driver"
+                                Mode="TwoWay" 
+                                UpdateSourceTrigger="PropertyChanged">
+                                <Binding.ValidationRules>
+                                    <StaticResource ResourceKey="DriverFIO" />
+                                </Binding.ValidationRules>
+                            </Binding>
+                        </controls:SuggestionTextBox.TextValue>
+                    </controls:SuggestionTextBox>
+                    <Button Content="..." Width="30" Margin="5,0,0,0"
+                        Command="{Binding OpenDriverReference}"/>
+                </StackPanel>
+                <Label Content="Тара"/>
+                <TextBlock Width="200" HorizontalAlignment="Left" Background="Gray"
+                    Text="{Binding SelectedWeighing.TareWeight, StringFormat='{}{0} кг'}"/>
+                <Label Content="Брутто"/>
+                <TextBlock Width="200" HorizontalAlignment="Left" Background="Gray"
+                    Text="{Binding SelectedWeighing.GrossWeight, StringFormat='{}{0} кг'}"/>
+                <Label Content="Нетто"/>
+                <TextBlock Width="200" HorizontalAlignment="Left" Background="Gray"
+                    Text="{Binding SelectedWeighing.NetWeight, StringFormat='{}{0} кг'}"/>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,20,0,0">
+                    <Button Content="Взвешать Тару"
+                        Command="{Binding WriteTareWeight}"/>
+                    <Button Content="Взвешать Брутто" Margin="30,0,0,0"
+                        Command="{Binding WriteGrossWeight}" />
+                    <Button Content="Новое взвешивание" Margin="30,0,0,0"
+                        Command="{Binding NewWeigh}" />
+                </StackPanel>
+                <Button Content="Сохранить взвешивание" Margin="0,10,0,0"
+                    Command="{Binding WriteWeight}"/>
+            </StackPanel>
+
+            <!-- Правая часть: фотофиксация и дерево взвешиваний -->
+            <StackPanel Grid.Column="1">
+                <Label Content="{Binding PhotoType}" ContentStringFormat="Фотофиксация {0}"/>
+                <!-- TODO биндинг тара бруто -->
+                <Grid>
+                    <Image Height="200" Width="300" Stretch="Uniform"
+						Source="{Binding WeighingPhotoSource, 
+                        Converter={StaticResource ByteArrayToBitmapImageConverter}}"/>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center"
+                                VerticalAlignment="Bottom" Margin="0,0,0,10">
+                        <Button Content="◄" Command="{Binding PreviousPhoto}" Margin="0,0,10,0"/>
+                        <Button Content="►" Command="{Binding NextPhoto}"/>
+                    </StackPanel>
+                </Grid>
+                <Label Content="Дерево взвешиваний"/>
+                <!-- Шаблон для элементов дерева -->
+                <TreeView ItemsSource="{Binding ListLocations}" Height="224">
+                    <TreeView.Resources>
+                        <Style TargetType="TreeViewItem">
+                            <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
+                        </Style>
+                    </TreeView.Resources>
+                    <TreeView.ItemTemplate>
+                        <HierarchicalDataTemplate ItemsSource="{Binding Years}">
+                            <Label Content="{Binding Name}"/>
+                            <HierarchicalDataTemplate.ItemTemplate>
+                                <HierarchicalDataTemplate ItemsSource="{Binding Months}">
+                                    <Label Content="{Binding YearValue}"/>
+                                    <HierarchicalDataTemplate.ItemTemplate>
+                                        <HierarchicalDataTemplate ItemsSource="{Binding Dates}">
+                                            <Label Content="{Binding MonthName}"/>
+                                            <HierarchicalDataTemplate.ItemTemplate>
+                                                <HierarchicalDataTemplate ItemsSource="{Binding Weighings}">
+                                                    <Label Content="{Binding DateValue}"/>
+                                                    <HierarchicalDataTemplate.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <Label>
+                                                                <AccessText>
+                                                                    <MultiBinding StringFormat="Тара: {0:HH:mm:ss} | Брутто: {1:HH:mm:ss} | Авто: {2} | Контрагент: {3}">
+                                                                        <Binding Path="TareTime"/>
+                                                                        <Binding Path="GrossTime" />
+                                                                        <Binding Path="Vehicle" />
+                                                                        <Binding Path="Counterparty" />
+                                                                    </MultiBinding>
+                                                                </AccessText>
+                                                            </Label>
+                                                        </DataTemplate>
+                                                    </HierarchicalDataTemplate.ItemTemplate>
+                                                </HierarchicalDataTemplate>
+                                            </HierarchicalDataTemplate.ItemTemplate>
+                                        </HierarchicalDataTemplate>
+                                    </HierarchicalDataTemplate.ItemTemplate>
+                                </HierarchicalDataTemplate>
+                            </HierarchicalDataTemplate.ItemTemplate>
+                        </HierarchicalDataTemplate>
+                    </TreeView.ItemTemplate>
+                    <i:Interaction.Triggers>
+                        <i:EventTrigger EventName="SelectedItemChanged">
+                            <i:InvokeCommandAction Command="{Binding WeighingTree_SelectedItemChanged}"
+                                CommandParameter="{Binding SelectedItem, 
+                                RelativeSource={RelativeSource AncestorType=TreeView}}" />
+                        </i:EventTrigger>
+                    </i:Interaction.Triggers>
+                </TreeView>
+            </StackPanel>
+        </Grid>
+
+        <!-- Нижняя панель: кнопки -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,10,0,0">
+            <Button Content="Сгенерировать PDF" Command="{Binding GeneratePdf}" Margin="0,0,10,0"/>
+            <Button Content="Сгенерировать Excel" Command="{Binding GenerateExcel}" Margin="0,0,10,0"/>
+            <Button Content="Настройки" Command="{Binding OpenSettings}"/>
+            <Button Content="История" Command="{Binding OpenHistory}" Margin="10,0,0,0"/>
+            <Button Content="Справка" Command="{Binding OpenHelp}" Margin="10,0,0,0"/>
+        </StackPanel>
+    </Grid>
+</Window>
